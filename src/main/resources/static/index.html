@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps Quick Console</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans h-screen flex flex-col p-6 overflow-hidden">
+
+    <header class="flex justify-between items-center border-b border-gray-800 pb-4 mb-4 shrink-0">
+        <div>
+            <h1 class="text-2xl font-bold text-white tracking-tight">DevOps Endpoint Console</h1>
+            <p class="text-xs text-gray-400">All practice metrics and chaos endpoints on a single screen.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-semibold animate-pulse">
+                ● Status: Online
+            </span>
+        </div>
+    </header>
+
+    <main class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 min-h-0">
+        
+        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700 flex flex-col min-h-0">
+            <div class="flex justify-between items-center mb-4 shrink-0">
+                <h2 class="font-bold text-indigo-400">/api/products</h2>
+                <button onclick="fetchProducts()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-xs font-medium transition">
+                    Refresh GET
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto border border-gray-700 rounded-lg bg-gray-900">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-gray-800 text-gray-400 sticky top-0">
+                        <tr>
+                            <th class="p-2.5">ID</th>
+                            <th class="p-2.5">Name</th>
+                            <th class="p-2.5 text-right">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-table-body" class="divide-y divide-gray-800">
+                        <tr>
+                            <td colspan="3" class="p-4 text-center text-gray-500">Loading items...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="md:col-span-2 flex flex-col gap-4 min-h-0">
+            
+            <div class="grid grid-cols-2 gap-4 shrink-0">
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-amber-400">/api/slow</h3>
+                        <p class="text-[11px] text-gray-400 mt-0.5">Injects 5s latency delay</p>
+                    </div>
+                    <button onclick="triggerEndpoint('/api/slow')" class="px-3 py-2 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 rounded-lg text-xs font-medium transition">
+                        Trigger
+                    </button>
+                </div>
+
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-rose-400">/api/error</h3>
+                        <p class="text-[11px] text-gray-400 mt-0.5">Generates HTTP 500 error</p>
+                    </div>
+                    <button onclick="triggerEndpoint('/api/error')" class="px-3 py-2 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 text-rose-400 rounded-lg text-xs font-medium transition">
+                        Trigger
+                    </button>
+                </div>
+
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-emerald-400">/actuator/health</h3>
+                        <p class="text-[11px] text-gray-400 mt-0.5">K8s Liveness Probe endpoint</p>
+                    </div>
+                    <button onclick="triggerEndpoint('/actuator/health')" class="px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/20 text-emerald-400 rounded-lg text-xs font-medium transition">
+                        Check
+                    </button>
+                </div>
+
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-blue-400">/actuator/metrics</h3>
+                        <p class="text-[11px] text-gray-400 mt-0.5">Raw JSON performance data</p>
+                    </div>
+                    <a href="/actuator/metrics" target="_blank" class="px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/20 text-blue-400 rounded-lg text-xs font-medium transition text-center">
+                        Open
+                    </a>
+                </div>
+            </div>
+
+            <div class="flex-1 bg-black rounded-xl p-4 border border-gray-800 font-mono text-xs flex flex-col min-h-0">
+                <div class="flex justify-between items-center text-gray-500 mb-2 border-b border-gray-900 pb-1.5 shrink-0">
+                    <span>Live Console Output</span>
+                    <button onclick="clearConsole()" class="hover:text-white">Clear</button>
+                </div>
+                <div id="console-output" class="flex-1 overflow-y-auto space-y-1 text-gray-400 selection:bg-indigo-500">
+                    <div>[SYSTEM] Console initialised. Click triggers above...</div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const consoleOut = document.getElementById('console-output');
+
+        function logToConsole(message, type = 'info') {
+            const colors = { info: 'text-blue-400', success: 'text-emerald-400', warn: 'text-amber-400', error: 'text-rose-400' };
+            const time = new Date().toLocaleTimeString();
+            consoleOut.innerHTML += `<div class="${colors[type]}">[${time}] ${message}</div>`;
+            consoleOut.scrollTop = consoleOut.scrollHeight;
+        }
+
+        function clearConsole() {
+            consoleOut.innerHTML = '<div>Console cleared.</div>';
+        }
+
+        async function fetchProducts() {
+            try {
+                const response = await fetch('/api/products');
+                const products = await response.json();
+                const tbody = document.getElementById('product-table-body');
+                tbody.innerHTML = '';
+                
+                products.forEach(p => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-800 transition">
+                            <td class="p-2.5 font-mono text-gray-500">${p.id}</td>
+                            <td class="p-2.5 text-white font-medium">${p.name}</td>
+                            <td class="p-2.5 text-right font-mono text-cyan-400">$${p.price.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+                logToConsole('Fetched /api/products successfully.', 'success');
+            } catch (err) {
+                logToConsole('Failed to fetch product catalog.', 'error');
+            }
+        }
+
+        async function triggerEndpoint(endpoint) {
+            logToConsole(`Hitting endpoint: ${endpoint}`, 'info');
+            try {
+                const response = await fetch(endpoint);
+                const text = await response.text();
+                if(response.ok) {
+                    logToConsole(`Response 200 OK -> ${text.substring(0, 50)}...`, 'success');
+                } else {
+                    logToConsole(`Response ${response.status} Error -> ${text}`, 'error');
+                }
+            } catch (err) {
+                logToConsole(`Network failure on ${endpoint}`, 'error');
+            }
+        }
+
+        // Auto fetch on boot
+        fetchProducts();
+    </script>
+</body>
+</html>
