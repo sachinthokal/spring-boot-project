@@ -1,5 +1,7 @@
 # 🚀 DevOps Practice Application [ Product Catalog Console ]
 
+![Helm](https://img.shields.io/badge/Helm-V3-blue?style=for-the-badge&logo=helm) ![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=for-the-badge&logo=kubernetes&logoColor=white) ![ArgoCD](https://img.shields.io/badge/argo%20cd-%23ef7b4d.svg?style=for-the-badge&logo=argo&logoColor=white)
+
 Welcome to the **DevOps Practice Application**. This is a lightweight Spring Boot 3.x microservice tailored specifically for DevOps engineers to practice containerization, CI/CD pipelines, monitoring, and chaos engineering.
 
 It features a **clean, single-screen responsive UI dashboard** connected to live backend endpoints and an integrated chaos testing laboratory.
