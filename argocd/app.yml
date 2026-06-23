@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spring-boot-app
+  namespace: argocd # ArgoCD namespace
+  labels:
+    app.kubernetes.io/name: spring-boot-app
+    app.kubernetes.io/part-of: argocd
+spec:
+  project: default
+  source:
+    # 1. Remote Chart repository URL
+    repoURL: 'https://sachinthokal.github.io/Helm_For_Devops/'
+    # 2. The exact name of the chart
+    chart: spring-boot-helm-chart
+    targetRevision: '*' # Use the latest version of the chart
+
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default # Namespace where the application will be deployed
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
